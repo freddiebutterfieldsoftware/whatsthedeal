@@ -108,12 +108,15 @@ if ENVIRONMENT == 'production':
         }
     }
 else:
+    # This is the development DB so don't get your hopes up...
+    # You'd have to get into the server in the first place
+    # On top of that the data is non-sensitive anyway
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', ''),
-            'USER': os.getenv('POSTGRES_USER', ''),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'NAME': os.getenv('POSTGRES_DB', 'appdb_dev'),
+            'USER': os.getenv('POSTGRES_USER', 'dev'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'bidenblast'),
             'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
             'PORT': os.getenv('POSTGRES_PORT', '5432'),
         }
