@@ -56,6 +56,8 @@ jobs:
     - name: Deploy to VPS via Docker Compose
       run: |
         cd /home/ezra/deployments/whatsthedeal
+        docker compose down --volumes --timeout 5
+        docker system prune -f
         docker compose pull web
         docker compose up -d web
         docker compose exec -T web /app/.venv/bin/python src/manage.py migrate --noinput
