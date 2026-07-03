@@ -61,4 +61,5 @@ jobs:
         docker compose pull web
         docker compose up -d web
         docker compose exec -T web /app/.venv/bin/python src/manage.py migrate --noinput
+        docker compose exec -T web /app/.venv/bin/python src/manage.py collectstatic --noinput
         docker compose exec -T web /app/.venv/bin/python src/manage.py createsuperuser --noinput || true

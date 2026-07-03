@@ -24,7 +24,7 @@ COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH" \
     DJANGO_ENV=production \
     PYTHONUNBUFFERED=1 \
-    DEBUG=0
+    DEBUG=False
 
 # Copy your source code
 COPY src/ /app/src/
