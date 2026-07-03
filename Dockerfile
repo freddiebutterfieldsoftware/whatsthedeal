@@ -33,4 +33,4 @@ COPY src/ /app/src/
 EXPOSE 8000
 
 # Run migrations and start production server (e.g., gunicorn)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "src.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--chdir", "/app/src", "whatsthedeal_site.wsgi:application"]
