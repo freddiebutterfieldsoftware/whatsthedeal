@@ -58,3 +58,5 @@ jobs:
         cd /home/ezra/deployments/whatsthedeal
         docker compose pull web
         docker compose up -d web
+        docker compose exec -T web uv run src/manage.py migrate --noinput
+        docker compose exec -T web uv run src/manage.py createsuperuser --noinput || true
