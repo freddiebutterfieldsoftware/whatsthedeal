@@ -162,8 +162,8 @@ STATIC_URL = 'static/'
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media" # CHANGE IN PROD
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 ACCOUNT_USER_MODEL_EMAIL_FIELD = None
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
