@@ -9,6 +9,7 @@ on:
 jobs:
 # --- JOB 1: Test the Application ---
   test:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v4
@@ -27,7 +28,7 @@ jobs:
 # --- JOB 2: Build, Push, and Deploy (CD) ---
   deploy:
     needs: test # Only runs if the test job passes successfully
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Only deploy on merges to main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only deploy on merges to main
     runs-on: self-hosted # Runs locally on your VPS where Docker is installed
     
     steps:
@@ -63,3 +64,4 @@ jobs:
         docker compose exec -T web /app/.venv/bin/python src/manage.py migrate --noinput
         docker compose exec -T web /app/.venv/bin/python src/manage.py collectstatic --noinput
         docker compose exec -T web /app/.venv/bin/python src/manage.py createsuperuser --noinput || true
+        docker compose exec -T web /app/.venv/bin/python src/manage.py seed_supermarkets
