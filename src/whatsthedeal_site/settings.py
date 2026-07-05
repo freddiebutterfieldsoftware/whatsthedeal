@@ -25,9 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-g8_u5+=l8cqe4xe6^zcbdy8xglz=aet8%k3=t55il+*7+0+=xo'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
+DEBUG = False if os.environ.get("DEBUG") == 0 else True
 
 
 # Application definition
@@ -167,5 +166,3 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 ACCOUNT_USER_MODEL_EMAIL_FIELD = None
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
-DEBUG = True if os.environ.get("DEBUG") == 1 else False
