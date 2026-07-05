@@ -205,7 +205,7 @@ class PostWorkflowTests(TestCase):
             {
                 "supermarket": self.supermarket.pk,
                 "main": "Chicken Burger",
-                "side_1": "Fries",
+                "side": "Fries",
                 "drink": "Coke",
                 "description": "A basic meal deal",
             },
@@ -225,7 +225,7 @@ class PostWorkflowTests(TestCase):
             {
                 "supermarket": self.supermarket.pk,
                 "main": "Chicken Burger",
-                "side_1": "Fries",
+                "side": "Fries",
                 "side_2": "Onion Rings",
                 "drink": "Coke",
                 "description": "Booths double side deal",
