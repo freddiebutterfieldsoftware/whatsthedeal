@@ -26,9 +26,6 @@ def index(request):
     return render(request, "index.html")
 
 def create_post(request):
-    # Clear old messages
-    storage = messages.get_messages(request)
-    storage.used = True
     if request.method == "POST":
         form = PostCreateForm(request.POST, request.FILES)
         if form.is_valid():
@@ -80,6 +77,9 @@ def create_post(request):
             else:
                 messages.add_message(request, messages.ERROR, "Please make sure you have filled all the required fields.")
     else:
+        # Clear old messages
+        storage = messages.get_messages(request)
+        storage.used = True
         form = PostCreateForm()
 
     return render(request, "whatsthedeal_app/post_form.html", {
