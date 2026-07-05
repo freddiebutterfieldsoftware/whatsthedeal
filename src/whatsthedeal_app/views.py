@@ -29,7 +29,6 @@ def create_post(request):
     # Clear old messages
     storage = messages.get_messages(request)
     storage.used = True
-    messages.add_message(request, messages.WARNING, "Something went wrong:")
     if request.method == "POST":
         form = PostCreateForm(request.POST, request.FILES)
         if form.is_valid():
@@ -75,6 +74,7 @@ def create_post(request):
             )
             return redirect("whatsthedeal:post-list")
         else:
+            messages.add_message(request, messages.WARNING, "Something went wrong:")
             if "image" in form.errors:
                 messages.add_message(request, messages.ERROR, "Please upload a valid image file.")
             else:
