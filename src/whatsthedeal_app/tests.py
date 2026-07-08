@@ -14,6 +14,7 @@ from .models import (
     Post,
     Preference,
     Supermarket,
+    Comment
 )
 
 
@@ -237,6 +238,85 @@ class PostWorkflowTests(TestCase):
         self.assertEqual(post.user.username, "anonymous")
         self.assertEqual(post.meal_deal.entries.count(), 4)
         self.assertEqual(post.meal_deal.items.count(), 4)
+
+    def test_guest_user_can_comment(self):
+        self.client.logout()
+        self._create_post(description="Visible deal")
+        post = Post.objects.get(description="Visible deal")
+
+        response = self.client.post(
+            reverse("whatsthedeal:post-view", kwargs={'pk': post.id}),
+            {
+                "comment": "I don't like this meal deal!"
+            }
+        )
+
+        self.assertEqual(response.status_code, 302)
+        comment = Comment.objects.get(content="I don't like this meal deal!")
+        self.assertEqual(comment.user.username, "anonymous")
+
+    def test_user_can_comment(self):
+        self.client.force_login(self.user)
+        self._create_post(description="Visible deal")
+        post = Post.objects.get(description="Visible deal")
+
+        response = self.client.post(
+            reverse("whatsthedeal:post-view", kwargs={'pk': post.id}),
+            {
+                "comment": "I don't like this meal deal!"
+            }
+        )
+
+        self.assertEqual(response.status_code, 302)
+        comment = Comment.objects.get(content="I don't like this meal deal!")
+        self.assertEqual(comment.user, self.user)
+
+
+class UserProfileTests(TestCase):
+    def test_user_detail_view_uses_username_in_url(self):
+        user = get_user_model().objects.create_user(username="profile-user", password="secret123")
+
+        response = self.client.get(reverse("whatsthedeal:user-view", kwargs={"username": user.username}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["profile_user"], user)
+
+    def test_profile_view_does_not_shadow_logged_in_user(self):
+        logged_in_user = get_user_model().objects.create_user(username="viewer", password="secret123")
+        profile_user = get_user_model().objects.create_user(username="profile-user", password="secret123")
+        self.client.force_login(logged_in_user)
+
+        response = self.client.get(reverse("whatsthedeal:user-view", kwargs={"username": profile_user.username}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["user"], logged_in_user)
+        self.assertEqual(response.context["profile_user"], profile_user)
+
+    def test_user_cannot_view_anonymous_user(self):
+        guest_user = get_user_model().objects.create_user(username="anonymous", password="secret123")
+
+        response = self.client.post(
+            reverse("whatsthedeal:user-view", kwargs={"username": guest_user.username}),
+            {"next": reverse("whatsthedeal:post-list")},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("whatsthedeal:post-list"))
+
+    def test_user_cannot_view_superuser(self):
+        superuser = get_user_model().objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="secret123",
+        )
+
+        response = self.client.post(
+            reverse("whatsthedeal:user-view", kwargs={"username": superuser.username}),
+            {"next": reverse("whatsthedeal:post-list")},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("whatsthedeal:post-list"))
 
 
 class ModelTests(TestCase):

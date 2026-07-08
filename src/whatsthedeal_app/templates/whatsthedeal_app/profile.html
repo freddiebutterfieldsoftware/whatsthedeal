@@ -1,0 +1,25 @@
+<!-- templates/whatsthedeal_app/view.html -->
+{% extends "base.html" %}
+
+{% block title %}View User{% endblock %}
+
+{% block content %}
+    <div class="container" style="max-width:760px; margin:1.25rem auto">
+        <h1>User: {{ profile_user.username }}</h1>
+        <div class="form-card">
+            <p><b>Posts made:</b> {{ number_posts }}</p>
+            <p><b>Total likes:</b> {{ total_num_likes }}</p>
+            <p><b>Total dislikes:</b> {{ total_num_dislikes }}</p>
+            <p><b>DealScore&trade;:</b> {{ score }}</p>
+        </div>
+
+        <h3>Recent Posts</h3>
+        <div class="feed-grid">
+            {% for p in recent_user_posts %}
+                {% include 'whatsthedeal_app/partials/post.html' with post=p %}
+            {% endfor %}
+        </div>
+        <br>
+        {% include 'whatsthedeal_app/partials/back_button.html' %}
+    </div>
+{% endblock %}

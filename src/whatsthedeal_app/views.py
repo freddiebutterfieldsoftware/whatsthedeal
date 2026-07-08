@@ -9,7 +9,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import generic
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
-from .forms import PostCreateForm
+from .forms import PostCreateForm, CommentForm
 
 from .models import (
     Item,
@@ -18,9 +18,11 @@ from .models import (
     MealDealItem,
     Post,
     Preference,
+    Comment,
 )
 
 MULTI_SIDE_SUPERMARKETS = {"Booths"}
+ANONYMOUS_USERNAME = "anonymous"
 
 def index(request):
     return render(request, "index.html")
@@ -134,8 +136,70 @@ class PostDetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = [context.get("object") or self.object]
-        context["post"] = build_post_feed(posts=post)[0] # only has 1 item
+        context_post = build_post_feed(posts=post)[0] # only has 1 item
+        context["post"] = context_post
+        context["comments"] = Comment.objects.filter(post=context_post["id"])
+        context["form"] = CommentForm()
         return context
+
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        obj = self.model.objects.get(id=pk)
+        user = request.user if request.user.is_authenticated else get_guest_user()
+        form = CommentForm(request.POST, request.FILES)
+        if form.is_valid():
+            content = form.cleaned_data["comment"]
+            Comment.objects.create(post=obj, user=user, content=content)
+        return redirect('whatsthedeal:post-view', pk=pk)
+
+class UserDetailView(generic.DetailView):
+    model = get_user_model()
+    template_name = 'whatsthedeal_app/profile.html'
+    slug_field = "username"
+    slug_url_kwarg = "username"
+
+    def get_object(self, queryset=None):
+        queryset = queryset or self.get_queryset()
+        username = self.kwargs.get(self.slug_url_kwarg)
+        return get_object_or_404(queryset, username=username)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = context.get("object") or self.object
+
+        posts = Post.objects.filter(user=profile_user).order_by("-created_at")
+        context_posts = build_post_feed(posts=posts)
+
+        context["profile_user"] = profile_user
+        context["user"] = self.request.user
+        context["username"] = profile_user.username
+        context["recent_user_posts"] = context_posts[:4]
+        total_num_likes = 0
+        total_num_dislikes = 0
+        for p in context_posts:
+            total_num_likes += p["likes"]
+            total_num_dislikes += p["dislikes"]
+
+        context["total_num_likes"] = total_num_likes
+        context["total_num_dislikes"] = total_num_dislikes
+        context["score"] = total_num_likes - total_num_dislikes
+
+        context["number_posts"] = len(context_posts)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        username = kwargs.get("username")
+        obj = get_object_or_404(self.model, username=username)
+
+        # We do not want the user to see stats related to the guest user or admins
+        if username == ANONYMOUS_USERNAME or obj.is_superuser:
+            # Prepare to redirect to wherever the user came from
+            next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
+            if next_url and not url_has_allowed_host_and_scheme(next_url, {request.get_host()}):
+                next_url = None
+            return redirect(next_url or 'whatsthedeal:index')
+            
+        return redirect("whatsthedeal:user-view", username=obj.username)
 
 @login_required
 def postpreference(request, postid, userpreference):
@@ -192,7 +256,7 @@ def postpreference(request, postid, userpreference):
                 eachpost.dislikes +=1
             upref.save()
             eachpost.save()
-        return redirect(next_url or 'whatsthedeal:post-list')
+        return redirect(request.POST.get('next', '/'))
     else:
         eachpost= get_object_or_404(Post, id=postid)
         context = {'eachpost': eachpost, 'postid': postid}
@@ -203,7 +267,7 @@ def postpreference(request, postid, userpreference):
 
 def get_guest_user():
     User = get_user_model()
-    guest_username = "anonymous"
+    guest_username = ANONYMOUS_USERNAME
     guest_email = "guest@example.com"
     user, _ = User.objects.get_or_create(
         username=guest_username,
