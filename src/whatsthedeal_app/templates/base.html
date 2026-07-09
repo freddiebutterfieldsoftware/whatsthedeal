@@ -17,7 +17,27 @@
       <a href="{% url 'whatsthedeal:index' %}">Home</a>
       <a href="{% url 'whatsthedeal:post-list' %}">Feed</a>
       {% if user.is_authenticated %}
-        <p class="small">Hello, {{ user.username }}</p>
+        <div class="navbar-user-section">
+            <p class="small">
+            Hello, <a href="{% url 'whatsthedeal:user-view' username=user.username %}" class="username-link">{{ user.username }}</a>
+            {% if notification_count > 0 %}
+              <span class="notification-badge">{{ notification_count }}</span>
+
+              <ul class="notification-dropdown">
+                {% for notification in navbar_notifications %}
+                  <li>
+                    <a href="{{ notification.url }}">
+                      One of your posts has new comments.
+                    </a>
+                  </li>
+                {% endfor %}
+                <li class="clear-all-row">
+                  <button class="btn btn-primary" id="clear-notifications-btn">Mark all as read</button>
+                </li>
+              </ul>
+            {% endif %}
+          </p>
+        </div>
         <form action="{% url 'account_logout' %}" method="post" style="display:inline">
           {% csrf_token %}
           <button class="btn" type="submit">Log Out</button>
@@ -33,8 +53,33 @@
   </main>
   <footer class="container site-footer">
     <p>Please send any website suggestions to <a href="mailto:freddie.butterfield1@gmail.com">freddie.butterfield1@gmail.com</a></p>
-    <p>&copy; 2025 Freddie Butterfield. All rights reserved.</p>
+    <p>&copy; 2026 Freddie Butterfield. All rights reserved.</p>
   </footer>
 </body>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const clearBtn = document.getElementById('clear-notifications-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        fetch("{% url 'whatsthedeal:clear-notifications' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}', // Protects against CSRF
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            // Remove the badge and dropdown completely from the DOM
+            document.querySelector('.notification-badge').remove();
+            document.querySelector('.notification-dropdown').remove();
+          }
+        });
+      });
+    }
+  });
+</script>
 
 </html>

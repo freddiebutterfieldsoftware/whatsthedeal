@@ -6,9 +6,9 @@ from django.contrib import messages
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import Http404, JsonResponse
 from django.views import generic
 from django.urls import reverse
-from django.core.exceptions import ObjectDoesNotExist
 from .forms import PostCreateForm, CommentForm
 
 from .models import (
@@ -187,19 +187,19 @@ class UserDetailView(generic.DetailView):
         context["number_posts"] = len(context_posts)
         return context
 
-    def post(self, request, *args, **kwargs):
-        username = kwargs.get("username")
-        obj = get_object_or_404(self.model, username=username)
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except Http404:
+            return redirect("whatsthedeal:index")
 
-        # We do not want the user to see stats related to the guest user or admins
-        if username == ANONYMOUS_USERNAME or obj.is_superuser:
-            # Prepare to redirect to wherever the user came from
+        if self.object.username == ANONYMOUS_USERNAME or self.object.is_superuser:
             next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
             if next_url and not url_has_allowed_host_and_scheme(next_url, {request.get_host()}):
                 next_url = None
-            return redirect(next_url or 'whatsthedeal:index')
-            
-        return redirect("whatsthedeal:user-view", username=obj.username)
+            return redirect(next_url or reverse("whatsthedeal:index"))
+
+        return super().dispatch(request, *args, **kwargs)
 
 @login_required
 def postpreference(request, postid, userpreference):
@@ -262,6 +262,12 @@ def postpreference(request, postid, userpreference):
         context = {'eachpost': eachpost, 'postid': postid}
 
         return render (request, 'posts/view.html', context)
+
+def clear_notifications(request):
+    if request.method == 'POST':
+        request.session.pop('new_comment_notifications', None)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'invalid method'}, status=400)
 
 # Helpers
 

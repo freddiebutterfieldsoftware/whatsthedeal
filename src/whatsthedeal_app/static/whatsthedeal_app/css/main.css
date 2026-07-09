@@ -58,6 +58,8 @@ body{
 }
 .navbar a{ text-decoration:none; color:var(--text); padding:0.45rem 0.6rem; border-radius:8px }
 .navbar a:hover{ color:var(--text); background:rgba(0,0,0,0.03) }
+.navbar a.username-link{ text-decoration:underline; padding-left:0;}
+.navbar a.username-link:hover{ background:none; }
 
 /* Buttons */
 .btn{
@@ -261,4 +263,49 @@ textarea{min-height:110px; resize:vertical}
   border-style: solid;
   border-color: #7c7c7c;
   border-width: 3px;
+}
+
+/* Notifications */
+.navbar-user-section {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+/* Hide the dropdown by default */
+.notification-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+  min-width: 250px;
+  z-index: 1;
+  list-style: none;
+  padding: 10px;
+  margin: 0;
+}
+
+/* Show the dropdown when hovering over the parent section */
+.navbar-user-section:hover .notification-dropdown {
+  display: block;
+}
+
+.notification-dropdown li a {
+  color: black;
+  text-decoration: none;
+  display: block;
+  padding: 8px;
+}
+
+.notification-dropdown li a:hover {
+  background-color: #f1f1f1;
 }
